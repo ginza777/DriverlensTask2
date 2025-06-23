@@ -1,0 +1,26 @@
+
+#
+# Core Deep Learning & Computer Vision Libraries for Local CPU Development
+# (e.g., macOS, Windows Subsystem for Linux (WSL) without GPU, Linux CPU)
+
+# Deep Learning Framework
+torch==2.5.0              # PyTorch library
+torchvision==0.20.0       # PyTorch vision utilities
+ultralytics==8.1.0        # YOLOv8 framework
+
+# Computer Vision & Object Tracking
+opencv-python==4.11.0.86  # OpenCV for Python
+norfair==2.3.0            # Lightweight 2D object tracking
+lap==0.5.12               # Linear Assignment Problem for tracking
+
+# Data Handling & Utilities
+numpy==1.26.4             # Numerical computing base
+PyYAML==6.0.2             # YAML parser for config files (e.g., data.yaml)
+tqdm==4.67.1              # Progress bars
+roboflow==1.1.66          # Dataset management (download, upload)
+
+# Data Analysis & Visualization (Optional, but useful for insights)
+pandas==2.3.0             # Data manipulation and analysis
+matplotlib==3.10.3        # Plotting library
+seaborn==0.13.2           # Statistical data visualization
+scipy==1.15.3             # Scientific computing

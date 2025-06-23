@@ -1,0 +1,12 @@
+train: /home/kali/Desktop/Driverlens/data/dataset/train/images
+val: /home/kali/Desktop/Driverlens/data/dataset/valid/images
+test: /home/kali/Desktop/Driverlens/data/dataset/test/images
+nc: 7
+names:
+  - person
+  - car
+  - traffic_light_red
+  - traffic_light_yellow
+  - traffic_light_green
+  - crosswalk
+  - line

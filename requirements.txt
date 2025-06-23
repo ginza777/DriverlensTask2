@@ -1,0 +1,22 @@
+# requirements.txt
+# CPU serveri uchun asosiy bog'liqliklar
+
+# Veb-ilova va server
+fastapi
+uvicorn[standard]
+Jinja2
+
+# Deep Learning Framework (GPU siz)
+# torch va torchvision bu yerda ENDI YO'Q, chunki ular Dockerfile da alohida o'rnatiladi.
+ultralytics==8.1.0
+
+# Computer Vision & Object Tracking
+opencv-python-headless==4.10.0.84
+norfair==2.3.0
+lap==0.5.12
+filterpy==1.4.5
+
+# Asosiy ma'lumotlar bilan ishlash
+numpy==1.26.4
+PyYAML==6.0.2
+tqdm==4.67.1

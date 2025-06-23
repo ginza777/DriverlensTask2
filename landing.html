@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DriverLens - Обнаружение нарушений ПДД</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Стиль для основных видеоконтейнеров */
+        .video-player-container {
+            position: relative;
+            padding-bottom: 56.25%; /* Соотношение сторон 16:9 */
+            height: 0;
+            overflow: hidden;
+            background-color: #000; /* Черный фон, когда видео не загружено */
+        }
+        .video-player-container video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Отображать видео полностью, без обрезки */
+        }
+        /* Стиль для индикатора прогресса */
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.35s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+        /* Стиль для карточек результатов */
+        .result-card {
+            transition: all 0.3s ease;
+        }
+        .result-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        /* Стиль для скриншота */
+        .screenshot-display {
+            width: 100%;
+            height: auto;
+            max-height: 400px; /* Ограничение высоты скриншота */
+            object-fit: contain;
+            display: block; /* img элементом блочного уровня */
+            margin: auto; /* Выровнять по центру */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto px-4 py-8">
+        <header class="mb-8">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <i class="fas fa-car-side text-blue-600 text-3xl mr-3"></i>
+                    <h1 class="text-2xl font-bold text-gray-800">DriverLens</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="hidden md:inline-block text-gray-600">Тестовое задание</span>
+                    </div>
+            </div>
+        </header>
+
+        <main class="flex flex-col lg:flex-row gap-8 mb-8">
+            <div class="lg:w-1/2">
+                <div class="bg-white rounded-xl shadow-md overflow-hidden h-full flex flex-col">
+                    <div class="p-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-800">Оригинальное видео</h2>
+                        <p class="text-sm text-gray-500">Исходное видео для анализа</p>
+                    </div>
+                    <div class="video-player-container flex-grow">
+                        <video id="originalVideo" controls class="w-full" muted autoplay loop>
+                            <source src="/static/tr.mp4" type="video/mp4">
+                            Ваш браузер не поддерживает видео.
+                        </video>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:w-1/2">
+                <div class="bg-white rounded-xl shadow-md overflow-hidden h-full flex flex-col">
+                    <div class="p-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-800">Аннотированное видео</h2>
+                        <p class="text-sm text-gray-500">Видео с обнаруженными нарушениями</p>
+                    </div>
+                    <div class="video-player-container flex-grow">
+                        <video id="annotatedVideo" controls class="w-full" autoplay muted>
+                            Ваш браузер не поддерживает видео.
+                        </video>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div id="progressSection" class="bg-white rounded-xl shadow-md p-6 flex flex-col items-center">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">Процесс анализа</h2>
+                <div class="relative w-32 h-32 mb-4">
+                    <svg class="w-full h-full" viewBox="0 0 100 100">
+                        <circle class="text-gray-200" stroke-width="8" stroke="currentColor" fill="transparent" r="40" cx="50" cy="50" />
+                        <circle id="progressCircle" class="text-blue-600 progress-ring__circle" stroke-width="8" stroke-linecap="round" stroke="currentColor" fill="transparent" r="40" cx="50" cy="50" stroke-dasharray="251.2" stroke-dashoffset="251.2" />
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span id="progressPercent" class="text-2xl font-bold text-gray-800">0%</span>
+                    </div>
+                </div>
+                <p id="progressText" class="text-gray-700 text-center">Нажмите кнопку, чтобы начать анализ...</p>
+                <button id="detectBtn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg flex items-center transition">
+                    <i class="fas fa-search mr-2"></i>Обнаружить нарушение
+                </button>
+                <div class="flex items-center space-x-2 mt-4">
+                    <span class="text-sm font-medium text-gray-700">Статус:</span>
+                    <span id="statusText" class="px-3 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-800">Готово</span>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="p-4 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-800">Отчет о нарушениях</h2>
+                    <p class="text-sm text-gray-500">Информация об обнаруженных нарушениях</p>
+                </div>
+
+                <div id="resultsContainer" class="p-4 space-y-4">
+                    <div class="text-center py-8">
+                        <i class="fas fa-clipboard-list text-gray-300 text-5xl mb-4"></i>
+                        <p class="text-gray-500">Результатов пока нет. Нажмите "Обнаружить нарушение" для анализа видео.</p>
+                    </div>
+                    </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md overflow-hidden p-6 flex flex-col items-center justify-center">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">Скриншот нарушения</h2>
+                <div id="screenshotDisplay" class="w-full flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden" style="min-height: 200px;">
+                    <img id="violationScreenshot" src="" alt="Скриншот нарушения" class="screenshot-display hidden rounded-lg shadow-md">
+                    <p id="screenshotPlaceholder" class="text-gray-400">Скриншот появится здесь</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const detectBtn = document.getElementById('detectBtn');
+            const progressSection = document.getElementById('progressSection');
+            const progressCircle = document.getElementById('progressCircle');
+            const progressPercent = document.getElementById('progressPercent');
+            const progressText = document = document.getElementById('progressText'); // Hozirgi o'zgaruvchi nomi bilan moslashtirildi
+            const statusText = document.getElementById('statusText');
+            const resultsContainer = document.getElementById('resultsContainer');
+            const originalVideo = document.getElementById('originalVideo');
+            const annotatedVideo = document.getElementById('annotatedVideo');
+            const violationScreenshot = document.getElementById('violationScreenshot');
+            const screenshotPlaceholder = document.getElementById('screenshotPlaceholder');
+            const screenshotDisplay = document.getElementById('screenshotDisplay');
+
+            const API_ENDPOINT = '/analyze_video';
+            const PROGRESS_ENDPOINT = '/progress';
+            const RESULTS_DATA_ENDPOINT = '/results_data';
+
+            let progressInterval;
+
+            function updateProgress(current, total) {
+                const percent = total > 0 ? (current / total) * 100 : 0;
+                const offset = 251.2 - (251.2 * percent / 100);
+                progressCircle.style.strokeDashoffset = offset;
+                progressPercent.textContent = `${Math.floor(percent)}%`;
+
+                if (current === 0 && total === 1) {
+                    progressText.textContent = "Готов к началу анализа...";
+                } else if (percent < 100) {
+                    progressText.textContent = `Анализируется: Кадр ${current} / ${total} ...`;
+                } else {
+                    progressText.textContent = "Анализ завершен! Результаты готовятся.";
+                }
+            }
+
+            detectBtn.addEventListener('click', async function() {
+                // Подготовка UI к началу анализа
+                detectBtn.disabled = true;
+                detectBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                detectBtn.classList.add('bg-blue-400', 'cursor-not-allowed');
+                statusText.textContent = "Анализируется";
+                statusText.classList.remove('bg-gray-200', 'bg-green-200');
+                statusText.classList.add('bg-yellow-200', 'text-yellow-800');
+
+                // Очистка полей результатов
+                resultsContainer.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-clipboard-list text-gray-300 text-5xl mb-4"></i>
+                        <p class="text-gray-500">Видео анализируется...</p>
+                    </div>
+                `;
+                annotatedVideo.src = ""; // Очистка аннотированного видео
+                annotatedVideo.removeAttribute('type'); // Очистка атрибута type
+                violationScreenshot.src = ""; // Очистка скриншота
+                violationScreenshot.classList.add('hidden');
+                screenshotPlaceholder.classList.remove('hidden');
+
+
+                updateProgress(0, 1); // Установить прогресс на 0%
+
+                // Начать получение прогресса с бэкенда
+                progressInterval = setInterval(async () => {
+                    try {
+                        const response = await fetch(PROGRESS_ENDPOINT);
+                        const data = await response.json();
+                        if (data.current_frame !== undefined && data.total_frames !== undefined) {
+                            updateProgress(data.current_frame, data.total_frames);
+                            // Если анализ завершен (или почти завершен) и результаты еще не получены
+                            if (data.current_frame >= data.total_frames && data.total_frames > 1) {
+                                clearInterval(progressInterval); // Сигнализировать о завершении анализа
+                                fetchResults(); // Начать получение результатов
+                            }
+                        }
+                    } catch (error) {
+                        console.error("Ошибка при получении прогресса:", error);
+                        clearInterval(progressInterval); // Остановить интервал в случае ошибки
+                        onAnalysisError();
+                    }
+                }, 500); // Обновлять прогресс каждые 0.5 секунды
+
+                try {
+                    // Отправить POST-запрос на бэкенд для начала анализа видео
+                    const response = await fetch(API_ENDPOINT, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ video_path: '/app/data/raw_videos/tr.mp4' })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ошибка! статус: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    console.log("Ответ о начале анализа:", data);
+
+                } catch (error) {
+                    console.error('Произошла ошибка при анализе видео:', error);
+                    alert("Произошла ошибка при анализе видео. Проверьте консоль.");
+                    clearInterval(progressInterval);
+                    onAnalysisError();
+                }
+            });
+
+            async function fetchResults() {
+                try {
+                    const response = await fetch(RESULTS_DATA_ENDPOINT);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ошибка! статус: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    displayResults([data]); // Отобразить результаты
+                    onAnalysisComplete();
+                } catch (error) {
+                    console.error("Ошибка при получении результатов:", error);
+                    onAnalysisError();
+                }
+            }
+
+            function onAnalysisComplete() {
+                detectBtn.disabled = false;
+                detectBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                detectBtn.classList.remove('bg-blue-400', 'cursor-not-allowed');
+                statusText.textContent = "Завершено";
+                statusText.classList.remove('bg-yellow-200', 'text-yellow-800');
+                statusText.classList.add('bg-green-200', 'text-green-800');
+                progressText.textContent = "Анализ завершен! Смотрите результаты ниже.";
+                updateProgress(100, 100); // Установить прогресс на полные 100%
+            }
+
+            function onAnalysisError() {
+                detectBtn.disabled = false;
+                detectBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                detectBtn.classList.remove('bg-blue-400', 'cursor-not-allowed');
+                statusText.textContent = "Ошибка";
+                statusText.classList.remove('bg-yellow-200', 'text-yellow-800', 'bg-green-200', 'text-green-800');
+                statusText.classList.add('bg-red-200', 'text-red-800');
+                progressText.textContent = "Во время анализа произошла ошибка.";
+                resultsContainer.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-exclamation-triangle text-red-500 text-5xl mb-4"></i>
+                        <p class="text-red-700 font-medium">Анализ не выполнен!</p>
+                        <p class="text-gray-500 text-sm mt-2">Пожалуйста, попробуйте снова или обратитесь к администратору.</p>
+                    </div>
+                `;
+                // В случае ошибки также очистить состояние скриншота и аннотированного видео
+                annotatedVideo.src = "";
+                annotatedVideo.removeAttribute('type');
+                violationScreenshot.src = "";
+                violationScreenshot.classList.add('hidden');
+                screenshotPlaceholder.classList.remove('hidden');
+            }
+
+            function displayResults(results) {
+                resultsContainer.innerHTML = '';
+
+                if (!results || results.length === 0 || !results[0].violation_detected) {
+                    resultsContainer.innerHTML = `
+                        <div class="text-center py-8">
+                            <i class="fas fa-check-circle text-green-500 text-5xl mb-4"></i>
+                            <p class="text-gray-700 font-medium">Нарушений не обнаружено!</p>
+                            <p class="text-gray-500 text-sm mt-2">Водитель соблюдал все правила дорожного движения.</p>
+                        </div>
+                    `;
+                    annotatedVideo.src = "";
+                    annotatedVideo.removeAttribute('type');
+                    violationScreenshot.src = "";
+                    violationScreenshot.classList.add('hidden');
+                    screenshotPlaceholder.classList.remove('hidden');
+                    return;
+                }
+
+                const resultData = results[0]; // Объект результата
+
+                // Вспомогательная функция для получения полного URL
+                const getFullUrl = (relativePath) => {
+                    if (relativePath && !relativePath.startsWith('http')) {
+                        return `http://localhost:8000${relativePath}`;
+                    }
+                    return relativePath;
+                };
+
+                const fullClipUrl = getFullUrl(resultData.clip_url);
+                const fullScreenshotUrl = getFullUrl(resultData.screenshot_url);
+                const fullAnnotatedVideoUrl = getFullUrl(resultData.annotated_video_url);
+
+                // Загрузка аннотированного видео (в правый плеер)
+                if (fullAnnotatedVideoUrl) {
+                    annotatedVideo.src = fullAnnotatedVideoUrl;
+                    annotatedVideo.setAttribute('type', 'video/mp4');
+                    annotatedVideo.load();
+                    annotatedVideo.play();
+                } else {
+                    annotatedVideo.src = "";
+                    annotatedVideo.removeAttribute('type');
+                }
+
+                // Загрузка скриншота
+                if (fullScreenshotUrl) {
+                    violationScreenshot.src = fullScreenshotUrl;
+                    violationScreenshot.classList.remove('hidden');
+                    screenshotPlaceholder.classList.add('hidden');
+                } else {
+                    violationScreenshot.src = "";
+                    violationScreenshot.classList.add('hidden');
+                    screenshotPlaceholder.classList.remove('hidden');
+                }
+
+                // Карточка отчета о нарушениях
+                const card = document.createElement('div');
+                card.className = 'result-card bg-white border border-gray-200 rounded-lg p-4 shadow-sm';
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <span class="inline-block px-2 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded mr-2">100%</span>
+                            <span class="text-sm text-gray-500">${resultData.timestamp || ''}</span>
+                        </div>
+                        <button class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                    </div>
+                    <h3 class="font-semibold text-gray-800 mb-1">${resultData.violation_type || 'Неизвестное нарушение'}</h3>
+
+                    <div class="flex justify-between items-center mt-4">
+                        <div class="flex space-x-2">
+                            ${fullScreenshotUrl ? `<a href="${fullScreenshotUrl}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm flex items-center">
+                                <i class="fas fa-image mr-1"></i> Посмотреть скриншот
+                            </a>` : ''}
+                            ${fullClipUrl ? `<a href="${fullClipUrl}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm flex items-center">
+                                <i class="fas fa-video mr-1"></i> Посмотреть клип (в новой вкладке)
+                            </a>` : ''}
+                        </div>
+                        <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">Нарушение</span>
+                    </div>
+                `;
+                resultsContainer.appendChild(card);
+
+                const summaryCard = document.createElement('div');
+                summaryCard.className = 'result-card bg-blue-50 border border-blue-100 rounded-lg p-4';
+                summaryCard.innerHTML = `
+                    <div class="flex items-center">
+                        <i class="fas fa-info-circle text-blue-600 mr-3"></i>
+                        <div>
+                            <h3 class="font-medium text-blue-800">Сводка анализа</h3>
+                            <p class="text-sm text-blue-600">В этом видео обнаружено 1 нарушение.</p>
+                        </div>
+                    </div>
+                `;
+                resultsContainer.insertBefore(summaryCard, resultsContainer.firstChild);
+            }
+        });
+    </script>
+</body>
+</html>

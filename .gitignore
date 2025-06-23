@@ -1,0 +1,6 @@
+yolov8n.pt
+/data/dataset
+/data/dataset_zip
+/runs
+./venv
+.env

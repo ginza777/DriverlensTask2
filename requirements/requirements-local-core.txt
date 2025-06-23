@@ -1,0 +1,80 @@
+# requirements.txt
+#
+# Project-wide Python dependencies for CPU environments.
+# This file is generated from 'pip freeze' and includes all direct and transitive dependencies.
+# Use this for reproducing the exact development environment on a CPU-only machine.
+
+# Deep Learning Framework
+torch==2.5.0              # PyTorch library
+torchvision==0.20.0       # PyTorch vision utilities
+ultralytics==8.1.0        # YOLOv8 framework
+
+# Computer Vision & Object Tracking
+opencv-python==4.11.0.86  # OpenCV for Python
+opencv-python-headless==4.10.0.84 # OpenCV without GUI dependencies
+norfair==2.3.0            # Lightweight 2D object tracking
+lap==0.5.12               # Linear Assignment Problem solver
+filterpy==1.4.5           # Kalman filters (dependency of Norfair)
+cvzone==1.6.1             # Computer Vision utilities
+
+# Data Handling & Utilities
+numpy==1.26.4             # Fundamental package for numerical computing
+PyYAML==6.0.2             # YAML parser for configuration files (e.g., data.yaml)
+tqdm==4.67.1              # Progress bars
+roboflow==1.1.66          # Dataset management platform integration
+pandas==2.3.0             # Data manipulation and analysis
+scipy==1.15.3             # Scientific computing tools
+psutil==7.0.0             # System and process utilities
+filelock==3.18.0          # File locking utility
+fsspec==2025.5.1          # Filesystem abstraction
+python-dotenv==1.1.0      # Loads environment variables from .env files
+
+# Plotting & Visualization
+matplotlib==3.10.3        # Comprehensive plotting library
+seaborn==0.13.2           # Statistical data visualization based on matplotlib
+
+# Image Processing
+pillow==11.2.1            # Python Imaging Library (PIL) fork
+pillow_heif==0.22.0       # HEIF image format support for Pillow
+
+# Web Requests & Network Utilities
+requests==2.32.4          # HTTP library for making requests
+urllib3==2.5.0            # HTTP client library, a dependency for requests
+idna==3.7                 # Internationalized Domain Names in Applications
+charset-normalizer==3.4.2 # Character set auto-detection
+certifi==2025.6.15        # Mozilla's collection of SSL Certificates
+requests-toolbelt==1.0.0  # Utilities for requests library
+
+# Parsing & Utility Libraries
+packaging==25.0           # Core utilities for Python packages
+pyparsing==3.2.3          # Parsing module for creating simple grammars
+cycler==0.12.1            # Composable cycles for matplotlib properties
+kiwisolver==1.4.8         # A fast implementation of the Cassowary constraint solver
+python-dateutil==2.9.0.post0 # Extensions to the datetime module
+pytz==2025.2              # World timezone definitions for datetime
+six==1.17.0               # Python 2 and 3 compatibility utilities
+typing_extensions==4.14.0 # Backported and experimental type hints
+tzdata==2025.2            # IANA timezone data
+filetype==1.2.0           # Infer file type and MIME type
+
+# Markup & Documentation
+Jinja2==3.1.6             # Templating engine
+MarkupSafe==3.0.2         # Implements XML/HTML/XHTML Markup safe string for Jinja2
+markdown-it-py==3.0.0     # Markdown parser
+mdurl==0.1.2              # Markdown URL utilities
+Pygments==2.19.1          # Syntax highlighter
+rich==14.0.0              # Rich text and beautiful formatting in the terminal
+
+# Numerical & Symbolic Math
+sympy==1.13.1             # Symbolic mathematics library
+mpmath==1.3.0             # Arbitrary-precision floating-point arithmetic
+networkx==3.4.2           # Graph library
+contourpy==1.3.2          # Matplotlib dependency for contour plotting
+fonttools==4.58.4         # Font manipulation library
+
+# Hardware Info
+py-cpuinfo==9.0.0         # Gets CPU info
+
+# Other
+hub-sdk==0.0.20           # Likely a specific SDK for a platform you're using
+thop==0.1.1.post2209072238 # FLOPs counter for PyTorch models
